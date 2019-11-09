@@ -6,45 +6,81 @@ import processing.core.PApplet
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
+const val MIN_BAR_HEIGHT = 4
+const val MARGIN = 10f
+const val INTER_BAR_SPACING = 2f
+const val REST_BEATS = 4
+const val MIN_BPM = 60f
+const val MAX_BPM = 2000f
+
 class BubbleSortSonicPi : PApplet() {
     private val notes = mutableListOf(
         48, 50, 52, 55, 57, 60, 62, 64, 67, 69, 72)
     private val highestNote = notes.max()
-    private val margin = 10f
-    private val interBarSpacing = 2f
+    private val lowestNote  = notes.min()
+    private val bottomBarAdjustment = (lowestNote ?: 0) - MIN_BAR_HEIGHT
     private var verticalScale = 1f
+    private var barWidth = 0f
+    private var mouseHasMoved = false
     private val sonicPi = OSCPortOut(InetSocketAddress(
         InetAddress.getLocalHost(), 4559))
 
     override fun settings() {
         size(400, 200)
-        val verticalSpace = height - 2 * margin
-        verticalScale = verticalSpace / (highestNote ?: 1)
-        notes.shuffle()
     }
 
     override fun setup() {
+        val verticalSpace = height - 2 * MARGIN
+        verticalScale = verticalSpace / ((highestNote ?: 1) - bottomBarAdjustment)
+        val horizontalSpace = width - 2 * MARGIN
+        barWidth = horizontalSpace / notes.size
+        notes.shuffle()
         surface.setTitle("Bubble Sort with Sonic Pi and Processing")
         fill(255f, 255f, 0f)
     }
 
+    var sleepTill = System.currentTimeMillis()
+
     override fun draw() {
-        frameRate(0.5f)
-        translate(0f, height.toFloat())
-        scale(1f, -1f)
+        if (System.currentTimeMillis() < sleepTill) return
+        frameRate(10f)
+        setUpQuadrantOne()
         background(255f, 128f, 0f)
-        if (!bubblePass())
+
+        if (!bubblePass()) // Take a pass and do one swap, and if done, reset
             notes.shuffle()
-        val space = width - 2 * margin
-        val barWidth = space / notes.size
-        notes.indices.map { i ->
-            rect(margin + i * barWidth, margin,
-                barWidth - interBarSpacing,
-                verticalScale * notes[i].toFloat())
-        }
-        sonicPi.send(OSCMessage("/play", notes))
+
+        drawNotes()
+
+        val bpm = if (mouseHasMoved) map(mouseX.toFloat(), 0f, width - 1f, MIN_BPM, MAX_BPM) else 300f
+        sonicPi.send(OSCMessage("/play", listOf(bpm, notes)))
+        val secsPerPlay = (notes.size + REST_BEATS) / bpm * 60
+        sleepTill = System.currentTimeMillis() + (secsPerPlay * 1000).toLong()
     }
 
+    override fun mouseMoved() {
+        mouseHasMoved = true
+    }
+
+    /** Draws a rectangle for each note */
+    private fun drawNotes() {
+        notes.indices.map { i ->
+            rect(MARGIN + i * barWidth, MARGIN,
+                    barWidth - INTER_BAR_SPACING,
+                    verticalScale * (notes[i].toFloat() - bottomBarAdjustment))
+        }
+    }
+
+    /** Brings the origin to the bottom left, and makes y increase going up */
+    private fun setUpQuadrantOne() {
+        translate(0f, height.toFloat())
+        scale(1f, -1f)
+    }
+
+    /**
+     * Takes a single pass through the notes and makes at most one swap.
+     * Returns whether a swap was made.
+     */
     private fun bubblePass(): Boolean {
         (0 until notes.size - 1).forEach { i ->
             if (notes[i] > notes[i + 1]) {
