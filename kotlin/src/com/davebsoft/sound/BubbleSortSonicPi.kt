@@ -11,17 +11,18 @@ const val MARGIN = 10f
 const val INTER_BAR_SPACING = 2f
 const val REST_BEATS = 4
 const val MIN_BPM = 60f
+const val DEFAULT_BPM = 300f
 const val MAX_BPM = 2000f
 
 class BubbleSortSonicPi : PApplet() {
     private val notes = mutableListOf(
         48, 50, 52, 55, 57, 60, 62, 64, 67, 69, 72)
-    private val highestNote = notes.max()
-    private val lowestNote  = notes.min()
-    private val bottomBarAdjustment = (lowestNote ?: 0) - MIN_BAR_HEIGHT
+    private val highestNote = notes.max() ?: 0
+    private val lowestNote  = notes.min() ?: 0
+    private val barHeightDecrease = lowestNote - MIN_BAR_HEIGHT
     private var verticalScale = 1f
     private var barWidth = 0f
-    private var mouseHasMoved = false
+    private var mouseHasMoved = false // Ignore mouse position until it’s moved
     private val sonicPi = OSCPortOut(InetSocketAddress(
         InetAddress.getLocalHost(), 4559))
 
@@ -31,7 +32,7 @@ class BubbleSortSonicPi : PApplet() {
 
     override fun setup() {
         val verticalSpace = height - 2 * MARGIN
-        verticalScale = verticalSpace / ((highestNote ?: 1) - bottomBarAdjustment)
+        verticalScale = verticalSpace / (highestNote - barHeightDecrease)
         val horizontalSpace = width - 2 * MARGIN
         barWidth = horizontalSpace / notes.size
         notes.shuffle()
@@ -52,7 +53,7 @@ class BubbleSortSonicPi : PApplet() {
 
         drawNotes()
 
-        val bpm = if (mouseHasMoved) map(mouseX.toFloat(), 0f, width - 1f, MIN_BPM, MAX_BPM) else 300f
+        val bpm = if (mouseHasMoved) map(mouseX.toFloat(), 0f, width - 1f, MIN_BPM, MAX_BPM) else DEFAULT_BPM
         sonicPi.send(OSCMessage("/play", listOf(bpm, notes)))
         val secsPerPlay = (notes.size + REST_BEATS) / bpm * 60
         sleepTill = System.currentTimeMillis() + (secsPerPlay * 1000).toLong()
@@ -67,7 +68,7 @@ class BubbleSortSonicPi : PApplet() {
         notes.indices.map { i ->
             rect(MARGIN + i * barWidth, MARGIN,
                     barWidth - INTER_BAR_SPACING,
-                    verticalScale * (notes[i].toFloat() - bottomBarAdjustment))
+                    verticalScale * (notes[i].toFloat() - barHeightDecrease))
         }
     }
 
