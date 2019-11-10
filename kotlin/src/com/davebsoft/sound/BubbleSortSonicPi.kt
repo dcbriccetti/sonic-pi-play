@@ -14,6 +14,12 @@ const val MIN_BPM = 60f
 const val DEFAULT_BPM = 300f
 const val MAX_BPM = 2000f
 
+/**
+ * This Processing (processing.org) application visualizes, and with the help
+ * of Sonic Pi, musically plays, a representation of sorting a sequence of
+ * shuffled notes, using a bubble sort. Install Sonic Pi from https://sonic-pi.net/,
+ * and with it run noteplayer.rb (in this repository).
+ */
 class BubbleSortSonicPi : PApplet() {
     private val notes = mutableListOf(
         48, 50, 52, 55, 57, 60, 62, 64, 67, 69, 72)
