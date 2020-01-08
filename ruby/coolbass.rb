@@ -4,11 +4,13 @@ e = 0.5
 
 live_loop :bass do
   use_synth_defaults attack: 0, decay: 0.1, sustain: 0.4, release: 0.2
-  with_transpose 0 do  # raise by 12 if your speakers can’t play that low
-    play_pattern_timed %i[d2 d3 c3 d3 r a2 c3 a2], e
-    play_pattern_timed %i[d2 d2 e2 f2 f2 fs2], [e, e, q, q, e, e]
-    play_pattern_timed %i[g2 g2 f2 g2 g2 d2 f2 g2], e
-    play_pattern_timed %i[a2 a2 c3 a2 c3 d3], [q, q, e, e, e, e]
+  with_transpose 0 do # raise by 12 if your speakers can’t play that low
+    [[%i[d2 d3 c3 d3 r a2 c3 a2], e],
+     [%i[d2 d2 e2 f2 f2 fs2], [e, e, q, q, e, e]],
+     [%i[g2 g2 f2 g2 g2 d2 f2 g2], e],
+     [%i[a2 a2 c3 a2 c3 d3], [q, q, e, e, e, e]]].each do |notes, times|
+      play_pattern_timed notes, times
+    end
   end
 end
 
