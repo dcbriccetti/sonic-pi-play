@@ -1,18 +1,18 @@
-bpm = 60
+bpm = 120
 use_bpm bpm
 use_synth :saw
 
-notes = scale(:c4, :major)
-n = 0
+notes = chord(:bf4, :major)
+highest = 0
 
 live_loop :call do
   use_bpm bpm
   4.times do
-    play notes[0..n].pick
+    play notes[0..highest].pick
     sleep 1
   end
   sleep 4
-  n += 1 unless n == notes.length - 1
+  highest += 1 unless highest == notes.length - 1
 end
 
 live_loop :rhythm do
