@@ -3,7 +3,7 @@ use_bpm bpm
 use_synth :saw
 
 notes = chord(:bf4, :major)
-highest = 0
+highest = 2
 
 live_loop :call do
   use_bpm bpm
